@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мой сахар</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body>
+
+<div id="gate" class="gate">
+  <h1>Доступ</h1>
+  <input id="pwd" type="password" placeholder="Пароль" autocomplete="off">
+  <button id="enter">Войти</button>
+  <p id="err" class="err"></p>
+</div>
+
+<main id="app" hidden>
+  <header>
+    <h1>Глюкоза</h1>
+    <div class="range">
+      <button data-range="1">24ч</button>
+      <button data-range="7" class="active">7д</button>
+      <button data-range="14">14д</button>
+      <button data-range="30">30д</button>
+      <button data-range="90">90д</button>
+      <button data-range="all">всё</button>
+    </div>
+  </header>
+
+  <section class="cards">
+    <div class="card"><div class="lbl">Среднее</div><div class="val" id="m_avg">—</div><div class="u">ммоль/л</div></div>
+    <div class="card"><div class="lbl">GMI (≈HbA1c)</div><div class="val" id="m_gmi">—</div><div class="u">%</div></div>
+    <div class="card"><div class="lbl">SD</div><div class="val" id="m_sd">—</div><div class="u">ммоль/л</div></div>
+    <div class="card"><div class="lbl">CV</div><div class="val" id="m_cv">—</div><div class="u">%</div></div>
+    <div class="card"><div class="lbl">Замеров</div><div class="val" id="m_n">—</div><div class="u">шт</div></div>
+    <div class="card"><div class="lbl">Период</div><div class="val small" id="m_period">—</div><div class="u"></div></div>
+  </section>
+
+  <section class="tir">
+    <div class="tir-head">Время в диапазонах (TIR / TBR / TAR)</div>
+    <div class="bar">
+      <div class="seg vlow" id="seg_vlow" title="<3.0"></div>
+      <div class="seg low"  id="seg_low"  title="3.0–3.9"></div>
+      <div class="seg in"   id="seg_in"   title="3.9–10.0"></div>
+      <div class="seg high" id="seg_high" title="10.0–13.9"></div>
+      <div class="seg vhigh" id="seg_vhigh" title=">13.9"></div>
+    </div>
+    <div class="legend">
+      <span class="lg vlow">&lt;3.0: <b id="p_vlow">—</b></span>
+      <span class="lg low">3.0–3.9: <b id="p_low">—</b></span>
+      <span class="lg in">3.9–10: <b id="p_in">—</b></span>
+      <span class="lg high">10–13.9: <b id="p_high">—</b></span>
+      <span class="lg vhigh">&gt;13.9: <b id="p_vhigh">—</b></span>
+    </div>
+  </section>
+
+  <section class="chart-wrap">
+    <canvas id="chart"></canvas>
+  </section>
+
+  <section class="chart-wrap">
+    <h2>Профиль по часам (медиана)</h2>
+    <canvas id="hourly"></canvas>
+  </section>
+
+  <footer>
+    <span id="status">Загрузка…</span>
+    <span class="dot">·</span>
+    <a href="https://github.com/" id="repo-link" target="_blank">Источник</a>
+  </footer>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
