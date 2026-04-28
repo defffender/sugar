@@ -4,50 +4,124 @@
   --acc:#58a6ff;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif}
-main{max-width:1100px;margin:0 auto;padding:16px 16px 64px}
-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin:8px 0 16px}
-header h1{margin:0;font-weight:700;letter-spacing:-0.02em}
-.range{display:flex;gap:6px;flex-wrap:wrap}
-.range button{background:var(--panel);color:var(--txt);border:1px solid var(--line);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+main{max-width:900px;margin:0 auto;padding:16px 16px 64px}
+
+/* ============ HERO ============ */
+.hero{display:flex;flex-direction:column;align-items:center;gap:12px;
+  padding:24px 12px 16px;margin-bottom:18px}
+.hero-ring{
+  width:260px;height:260px;border-radius:50%;
+  border:8px solid var(--in);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;
+  background:radial-gradient(circle at center, rgba(63,185,80,0.10), transparent 70%);
+  transition:border-color .3s, background .3s;
+}
+.hero-ring.r-vlow  {border-color:var(--vlow);  background:radial-gradient(circle at center, rgba(218,54,51,0.18), transparent 70%)}
+.hero-ring.r-low   {border-color:var(--low);   background:radial-gradient(circle at center, rgba(240,136,62,0.15), transparent 70%)}
+.hero-ring.r-in    {border-color:var(--in);    background:radial-gradient(circle at center, rgba(63,185,80,0.12),  transparent 70%)}
+.hero-ring.r-high  {border-color:var(--high);  background:radial-gradient(circle at center, rgba(210,153,34,0.15), transparent 70%)}
+.hero-ring.r-vhigh {border-color:var(--vhigh); background:radial-gradient(circle at center, rgba(137,87,229,0.15), transparent 70%)}
+
+.hero-now-label{color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px}
+.hero-value{font-size:88px;font-weight:800;line-height:1;letter-spacing:-0.04em}
+.hero-unit{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:0.05em}
+.hero-trend{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:32px;color:var(--muted)}
+.hero-trend.up    {color:var(--high)}
+.hero-trend.down  {color:var(--low)}
+.hero-trend.steep-up   {color:var(--vhigh)}
+.hero-trend.steep-down {color:var(--vlow)}
+.hero-trend.flat  {color:var(--in)}
+
+.hero-meta{display:flex;gap:16px;color:var(--muted);font-size:13px}
+.hero-meta .hero-delta.pos{color:var(--high)}
+.hero-meta .hero-delta.neg{color:var(--low)}
+
+/* ============ Range chips ============ */
+.range{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.range button{
+  background:var(--panel);color:var(--txt);border:1px solid var(--line);
+  padding:8px 14px;border-radius:18px;cursor:pointer;font-size:14px;
+  min-width:48px;
+}
 .range button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
 
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
-.card .lbl{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:0.05em}
-.card .val{font-size:28px;font-weight:700;margin-top:4px}
-.card .val.small{font-size:14px;font-weight:500}
-.card .u{color:var(--muted);font-size:12px}
+/* ============ MAX / TIR / MIN ============ */
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+.trio-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:14px 10px;text-align:center
+}
+.trio-lbl{color:var(--muted);font-size:11px;letter-spacing:0.08em;font-weight:600}
+.trio-val{font-size:26px;font-weight:700;margin-top:6px;line-height:1.1}
+.trio-sub{color:var(--muted);font-size:12px;margin-top:4px}
+.trio-card.hi .trio-val{color:var(--high)}
+.trio-card.lo .trio-val{color:var(--low)}
+.trio-card.mid .trio-val{color:var(--in)}
 
-.tir{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:16px}
-.tir-head{color:var(--muted);font-size:13px;margin-bottom:8px}
-.bar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:#222}
+/* ============ Charts ============ */
+.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:14px;margin-bottom:16px}
+.chart-wrap h2{margin:0 0 10px 0;font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0.02em}
+canvas{width:100%!important;height:300px!important}
+
+/* ============ TIR section (donut + legend + bar) ============ */
+.tir-section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:14px;margin-bottom:16px}
+.tir-section h2{margin:0 0 12px 0;font-size:15px;color:var(--muted);font-weight:500}
+.tir-row{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:center;margin-bottom:14px}
+.tir-donut{position:relative;width:200px;height:200px}
+.tir-donut canvas{width:200px!important;height:200px!important}
+.tir-legend{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.tir-line{display:grid;grid-template-columns:14px 1fr auto;gap:8px;align-items:center}
+.tir-line b{font-weight:700;color:var(--txt)}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.dot.vlow{background:var(--vlow)}
+.dot.low{background:var(--low)}
+.dot.in{background:var(--in)}
+.dot.high{background:var(--high)}
+.dot.vhigh{background:var(--vhigh)}
+
+.bar{display:flex;height:16px;border-radius:6px;overflow:hidden;background:#222}
 .seg{height:100%;transition:width .3s}
 .seg.vlow{background:var(--vlow)}
 .seg.low{background:var(--low)}
 .seg.in{background:var(--in)}
 .seg.high{background:var(--high)}
 .seg.vhigh{background:var(--vhigh)}
-.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--muted)}
-.legend .lg b{color:var(--txt)}
-.legend .vlow::before,.legend .low::before,.legend .in::before,.legend .high::before,.legend .vhigh::before{
-  content:"■ ";margin-right:2px
-}
-.legend .vlow::before{color:var(--vlow)}
-.legend .low::before{color:var(--low)}
-.legend .in::before{color:var(--in)}
-.legend .high::before{color:var(--high)}
-.legend .vhigh::before{color:var(--vhigh)}
 
-.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:16px}
-.chart-wrap h2{margin:0 0 8px 0;font-size:15px;color:var(--muted);font-weight:500}
-canvas{width:100%!important;height:320px!important}
+@media (max-width:600px){
+  .tir-row{grid-template-columns:1fr;justify-items:center}
+  .tir-donut{width:180px;height:180px}
+  .tir-donut canvas{width:180px!important;height:180px!important}
+  .tir-legend{width:100%}
+}
+
+/* ============ Metrics grid ============ */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:16px}
+.metric{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px}
+.m-lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.06em}
+.m-val{font-size:22px;font-weight:700;margin-top:4px;line-height:1.1}
+.m-val.small{font-size:13px;font-weight:500}
+.m-u{color:var(--muted);font-size:11px;margin-top:2px}
 
 footer{color:var(--muted);font-size:12px;margin-top:16px;text-align:center}
-footer a{color:var(--muted)}
 
+/* ============ Gate ============ */
 .gate{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--bg);z-index:10}
 .gate h1{margin:0 0 8px}
 .gate input{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:240px;font-size:16px}
 .gate button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 20px;font-size:16px;cursor:pointer}
 .err{color:var(--vlow);font-size:13px;min-height:1em}
+
+/* Mobile fine-tuning */
+@media (max-width:480px){
+  .hero-ring{width:230px;height:230px;border-width:7px}
+  .hero-value{font-size:72px}
+  .trio-val{font-size:22px}
+  .range button{padding:7px 12px;font-size:13px;min-width:42px}
+}
