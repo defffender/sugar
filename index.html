@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
 <title>Мой сахар</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -18,58 +19,102 @@
 </div>
 
 <main id="app" hidden>
-  <header>
-    <h1>Глюкоза</h1>
-    <div class="range">
-      <button data-range="1">24ч</button>
-      <button data-range="7" class="active">7д</button>
-      <button data-range="14">14д</button>
-      <button data-range="30">30д</button>
-      <button data-range="90">90д</button>
-      <button data-range="all">всё</button>
-    </div>
-  </header>
 
-  <section class="cards">
-    <div class="card"><div class="lbl">Среднее</div><div class="val" id="m_avg">—</div><div class="u">ммоль/л</div></div>
-    <div class="card"><div class="lbl">GMI (≈HbA1c)</div><div class="val" id="m_gmi">—</div><div class="u">%</div></div>
-    <div class="card"><div class="lbl">SD</div><div class="val" id="m_sd">—</div><div class="u">ммоль/л</div></div>
-    <div class="card"><div class="lbl">CV</div><div class="val" id="m_cv">—</div><div class="u">%</div></div>
-    <div class="card"><div class="lbl">Замеров</div><div class="val" id="m_n">—</div><div class="u">шт</div></div>
-    <div class="card"><div class="lbl">Период</div><div class="val small" id="m_period">—</div><div class="u"></div></div>
-  </section>
-
-  <section class="tir">
-    <div class="tir-head">Время в диапазонах (TIR / TBR / TAR)</div>
-    <div class="bar">
-      <div class="seg vlow" id="seg_vlow" title="<3.0"></div>
-      <div class="seg low"  id="seg_low"  title="3.0–3.9"></div>
-      <div class="seg in"   id="seg_in"   title="3.9–10.0"></div>
-      <div class="seg high" id="seg_high" title="10.0–13.9"></div>
-      <div class="seg vhigh" id="seg_vhigh" title=">13.9"></div>
+  <!-- HERO: текущее значение -->
+  <section class="hero">
+    <div class="hero-ring" id="hero_ring">
+      <div class="hero-now-label">Сейчас</div>
+      <div class="hero-value" id="hero_value">—</div>
+      <div class="hero-unit">ммоль/л</div>
+      <div class="hero-trend" id="hero_trend">→</div>
     </div>
-    <div class="legend">
-      <span class="lg vlow">&lt;3.0: <b id="p_vlow">—</b></span>
-      <span class="lg low">3.0–3.9: <b id="p_low">—</b></span>
-      <span class="lg in">3.9–10: <b id="p_in">—</b></span>
-      <span class="lg high">10–13.9: <b id="p_high">—</b></span>
-      <span class="lg vhigh">&gt;13.9: <b id="p_vhigh">—</b></span>
+    <div class="hero-meta">
+      <div class="hero-time" id="hero_time">—</div>
+      <div class="hero-delta" id="hero_delta">—</div>
     </div>
   </section>
 
+  <!-- Чипы периода -->
+  <div class="range" id="range">
+    <button data-range="0.125">3ч</button>
+    <button data-range="0.25">6ч</button>
+    <button data-range="0.5">12ч</button>
+    <button data-range="1" class="active">24ч</button>
+    <button data-range="7">7д</button>
+    <button data-range="14">14д</button>
+    <button data-range="30">30д</button>
+    <button data-range="90">90д</button>
+  </div>
+
+  <!-- MAX / TIR / MIN -->
+  <section class="trio">
+    <div class="trio-card hi">
+      <div class="trio-lbl">МАКС</div>
+      <div class="trio-val" id="t_max">—</div>
+      <div class="trio-sub" id="t_max_t">—</div>
+    </div>
+    <div class="trio-card mid">
+      <div class="trio-lbl">TIR</div>
+      <div class="trio-val" id="t_tir">—</div>
+      <div class="trio-sub" id="t_tir_dur">—</div>
+    </div>
+    <div class="trio-card lo">
+      <div class="trio-lbl">МИН</div>
+      <div class="trio-val" id="t_min">—</div>
+      <div class="trio-sub" id="t_min_t">—</div>
+    </div>
+  </section>
+
+  <!-- Основной график (с целевой зоной) -->
   <section class="chart-wrap">
+    <h2>График глюкозы</h2>
     <canvas id="chart"></canvas>
   </section>
 
+  <!-- TIR пирог -->
+  <section class="tir-section">
+    <h2>Время в диапазонах</h2>
+    <div class="tir-row">
+      <div class="tir-donut">
+        <canvas id="donut"></canvas>
+      </div>
+      <div class="tir-legend">
+        <div class="tir-line"><span class="dot vhigh"></span><span>Очень высокий &gt;13.9</span><b id="p_vhigh">—</b></div>
+        <div class="tir-line"><span class="dot high"></span><span>Высокий 10–13.9</span><b id="p_high">—</b></div>
+        <div class="tir-line"><span class="dot in"></span><span>В норме 3.9–10</span><b id="p_in">—</b></div>
+        <div class="tir-line"><span class="dot low"></span><span>Низкий 3.0–3.9</span><b id="p_low">—</b></div>
+        <div class="tir-line"><span class="dot vlow"></span><span>Очень низкий &lt;3.0</span><b id="p_vlow">—</b></div>
+      </div>
+    </div>
+    <div class="bar">
+      <div class="seg vlow" id="seg_vlow"></div>
+      <div class="seg low"  id="seg_low"></div>
+      <div class="seg in"   id="seg_in"></div>
+      <div class="seg high" id="seg_high"></div>
+      <div class="seg vhigh" id="seg_vhigh"></div>
+    </div>
+  </section>
+
+  <!-- Метрики -->
+  <section class="metrics">
+    <div class="metric"><div class="m-lbl">Среднее</div><div class="m-val" id="m_avg">—</div><div class="m-u">ммоль/л</div></div>
+    <div class="metric"><div class="m-lbl">eHbA1c</div><div class="m-val" id="m_ehba1c">—</div><div class="m-u">%</div></div>
+    <div class="metric"><div class="m-lbl">GMI</div><div class="m-val" id="m_gmi">—</div><div class="m-u">%</div></div>
+    <div class="metric"><div class="m-lbl">SD</div><div class="m-val" id="m_sd">—</div><div class="m-u">ммоль/л</div></div>
+    <div class="metric"><div class="m-lbl">CV</div><div class="m-val" id="m_cv">—</div><div class="m-u">%</div></div>
+    <div class="metric"><div class="m-lbl">НМГ</div><div class="m-val" id="m_uptime">—</div><div class="m-u">%</div></div>
+    <div class="metric"><div class="m-lbl">Замеров</div><div class="m-val" id="m_n">—</div><div class="m-u">шт</div></div>
+    <div class="metric"><div class="m-lbl">Период</div><div class="m-val small" id="m_period">—</div><div class="m-u"></div></div>
+  </section>
+
+  <!-- AGP -->
   <section class="chart-wrap">
-    <h2>Профиль по часам (медиана)</h2>
+    <h2>Профиль по часам (AGP)</h2>
     <canvas id="hourly"></canvas>
   </section>
 
   <footer>
     <span id="status">Загрузка…</span>
-    <span class="dot">·</span>
-    <a href="https://github.com/" id="repo-link" target="_blank">Источник</a>
   </footer>
 </main>
 
