@@ -42,4 +42,4 @@
             git add data.csv
             git commit -m "health: glucose sync $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             git pull --rebase origin "$GITHUB_REF_NAME" || true
-            git pus
+            git push
