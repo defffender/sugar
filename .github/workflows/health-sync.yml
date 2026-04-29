@@ -1,0 +1,45 @@
+  name: Health Sync
+
+  on:
+    repository_dispatch:
+      types: [glucose]
+
+  permissions:
+    contents: write
+
+  concurrency:
+    group: sugar-data
+    cancel-in-progress: false
+
+  jobs:
+    write:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v5
+
+        - name: Write data.csv
+          env:
+            CSV_BODY: ${{ github.event.client_payload.csv }}
+          run: |
+            if [[ -z "$CSV_BODY" ]]; then
+              echo "Empty client_payload.csv — aborting"
+              exit 1
+            fi
+            {
+              echo "Time,Glucose (mmol/L)"
+              printf '%s\n' "$CSV_BODY"
+            } > data.csv
+            wc -l data.csv
+
+        - name: Commit and push
+          run: |
+            if [[ -z "$(git status --porcelain data.csv)" ]]; then
+              echo "data.csv unchanged"
+              exit 0
+            fi
+            git config user.name "health-sync-bot"
+            git config user.email "health-sync-bot@users.noreply.github.com"
+            git add data.csv
+            git commit -m "health: glucose sync $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git pull --rebase origin "$GITHUB_REF_NAME" || true
+            git pus
