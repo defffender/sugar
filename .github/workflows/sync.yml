@@ -1,10 +1,7 @@
 name: Sync Sugar Data
 
 on:
-  schedule:
-    # Каждые 5 минут. GitHub может задерживать на 5–15 мин под нагрузкой — это нормально.
-    - cron: '*/5 * * * *'
-  workflow_dispatch:  # ручной запуск кнопкой в Actions UI
+    workflow_dispatch:
 
 permissions:
   contents: write
