@@ -140,10 +140,11 @@ function computeUptime(data){
   return Math.min(100, 100*data.length/expected);
 }
 
+const TZ = "Asia/Novosibirsk";
 function fmt(x,d=1){ return (x==null||isNaN(x))?"—":x.toFixed(d); }
-function fmtTime(d){ return d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}); }
-function fmtDate(d){ return d.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit",year:"2-digit"}); }
-function fmtDateTime(d){ return d.toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}); }
+function fmtTime(d){ return d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",timeZone:TZ}); }
+function fmtDate(d){ return d.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit",year:"2-digit",timeZone:TZ}); }
+function fmtDateTime(d){ return d.toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",timeZone:TZ}); }
 
 function rangeOf(v){
   if(v<CONFIG.VLOW) return "vlow";
@@ -166,6 +167,7 @@ function renderHero(allData){
   ring.classList.remove("r-vlow","r-low","r-in","r-high","r-vhigh");
   trendEl.classList.remove("up","down","steep-up","steep-down","flat");
   trendEl.textContent = "→";
+  timeEl.classList.remove("stale");
   deltaEl.classList.remove("pos","neg");
 
   if(!allData.length){ valEl.textContent="—"; timeEl.textContent="—"; deltaEl.textContent="—"; return; }
@@ -176,9 +178,15 @@ function renderHero(allData){
   ring.classList.add("r-"+rangeOf(last.g));
 
   if(ageMin < CONFIG.CURRENT_FRESH_MIN){
-    timeEl.textContent = "Сейчас · "+fmtTime(last.t);
+    timeEl.textContent = "Замер: "+fmtTime(last.t)+" (Новосибирск)";
   } else {
-    timeEl.textContent = "Последнее: "+fmtDateTime(last.t);
+    timeEl.classList.add("stale");
+    const ageStr = ageMin < 60
+      ? Math.round(ageMin)+" мин назад"
+      : ageMin < 60*24
+        ? Math.round(ageMin/60)+" ч назад"
+        : Math.round(ageMin/60/24)+" дн назад";
+    timeEl.textContent = "Последнее: "+fmtDateTime(last.t)+" · "+ageStr;
   }
 
   // Тренд: наклон в ммоль/л за 15 минут
@@ -276,6 +284,41 @@ const targetZonePlugin = {
   }
 };
 
+// Плагин: вертикальная линейка под пальцем
+const crosshairPlugin = {
+  id: "crosshair",
+  afterDraw(c){
+    const active = c.tooltip && c.tooltip._active;
+    if(!active || !active.length) return;
+    const x = active[0].element.x;
+    const {top, bottom} = c.chartArea;
+    c.ctx.save();
+    c.ctx.beginPath();
+    c.ctx.moveTo(x, top);
+    c.ctx.lineTo(x, bottom);
+    c.ctx.lineWidth = 1;
+    c.ctx.setLineDash([4,4]);
+    c.ctx.strokeStyle = "rgba(139,148,158,0.6)";
+    c.ctx.stroke();
+    c.ctx.restore();
+  }
+};
+
+// Подпись для оси X — авто-формат по диапазону, всё в Asia/Novosibirsk
+function xTickFormatter(value, index, ticks){
+  const d = new Date(value);
+  if(!ticks || !ticks.length) return d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",timeZone:TZ});
+  const spanMs = ticks[ticks.length-1].value - ticks[0].value;
+  const day = 86400000;
+  if(spanMs < 2*day){
+    return d.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",timeZone:TZ});
+  } else if(spanMs < 30*day){
+    return d.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit",timeZone:TZ});
+  } else {
+    return d.toLocaleDateString("ru-RU",{day:"2-digit",month:"2-digit",year:"2-digit",timeZone:TZ});
+  }
+}
+
 function renderChart(data){
   const ctx=document.getElementById("chart");
   const points=data.map(d=>({x:d.t, y:d.g}));
@@ -286,7 +329,10 @@ function renderChart(data){
       data: points,
       borderColor:"#58a6ff",
       backgroundColor:"rgba(88,166,255,0.08)",
-      fill:false, tension:0.25, pointRadius:0, borderWidth:1.6,
+      fill:false, tension:0.25,
+      pointRadius:0, pointHoverRadius:5, pointHitRadius:20,
+      pointHoverBackgroundColor:"#fff", pointHoverBorderColor:"#58a6ff", pointHoverBorderWidth:2,
+      borderWidth:1.6,
       segment:{
         borderColor: ctx => {
           const v = ctx.p1.parsed.y;
@@ -298,16 +344,39 @@ function renderChart(data){
     }]},
     options:{
       responsive:true, maintainAspectRatio:false, animation:false,
-      plugins:{ legend:{display:false}, tooltip:{
-        callbacks:{ label: ctx => fmt(ctx.parsed.y,1)+" ммоль/л" }
-      }},
+      // палец/мышь в любом месте графика → ближайшая точка по X
+      interaction:{ mode:"index", intersect:false, axis:"x" },
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          mode:"index", intersect:false, axis:"x",
+          backgroundColor:"rgba(22,27,34,0.95)",
+          borderColor:"#22272e", borderWidth:1,
+          titleColor:"#e6edf3", bodyColor:"#e6edf3",
+          padding:10, cornerRadius:8,
+          displayColors:false,
+          callbacks:{
+            title: items => {
+              if(!items.length) return "";
+              const d = new Date(items[0].parsed.x);
+              return d.toLocaleString("ru-RU",{
+                day:"2-digit",month:"2-digit",year:"2-digit",
+                hour:"2-digit",minute:"2-digit",
+                timeZone:TZ
+              });
+            },
+            label: ctx => fmt(ctx.parsed.y,1)+" ммоль/л"
+          }
+        }
+      },
       scales:{
-        x:{ type:"time", time:{tooltipFormat:"dd.MM.yyyy HH:mm"},
-            ticks:{color:"#8b949e",maxTicksLimit:8}, grid:{color:"#22272e"} },
+        x:{ type:"time",
+            ticks:{ color:"#8b949e", maxTicksLimit:8, callback:xTickFormatter },
+            grid:{color:"#22272e"} },
         y:{ min:2, max:22, ticks:{color:"#8b949e",stepSize:4}, grid:{color:"#22272e"} }
       }
     },
-    plugins:[targetZonePlugin]
+    plugins:[targetZonePlugin, crosshairPlugin]
   });
 }
 
@@ -400,27 +469,55 @@ function applyRange(rangeKey){
 }
 
 // =============================================================
+// Живые часы Новосибирска
+// =============================================================
+function startClock(){
+  const el = document.getElementById("hero_clock");
+  if(!el) return;
+  const tick = () => {
+    const now = new Date();
+    const t = now.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:TZ});
+    el.innerHTML = t + '<span class="tz">Новосибирск</span>';
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+// =============================================================
 // Init
 // =============================================================
+let CURRENT_RANGE = "1";
+
+async function loadAndRender(){
+  const status=document.getElementById("status");
+  status.textContent="Загружаю CSV…";
+  const r=await fetch(CONFIG.CSV_URL+"?t="+Date.now(),{cache:"no-store"});
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  const text=await r.text();
+  ALL=loadData(text);
+  if(!ALL.length) throw new Error("Нет валидных записей");
+  status.textContent="Записей: "+ALL.length+" · обновлено "+fmtDateTime(new Date());
+  renderHero(ALL);
+  applyRange(CURRENT_RANGE);
+}
+
 async function init(){
   const status=document.getElementById("status");
+  startClock();
   try{
-    status.textContent="Загружаю CSV…";
-    const r=await fetch(CONFIG.CSV_URL+"?t="+Date.now());
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const text=await r.text();
-    ALL=loadData(text);
-    if(!ALL.length) throw new Error("Нет валидных записей");
-    status.textContent="Записей: "+ALL.length+" · обновлено "+fmtDateTime(new Date());
-    renderHero(ALL);
-    applyRange("1");
+    await loadAndRender();
     document.querySelectorAll(".range button").forEach(b=>{
       b.onclick=()=>{
         document.querySelectorAll(".range button").forEach(x=>x.classList.remove("active"));
         b.classList.add("active");
-        applyRange(b.dataset.range);
+        CURRENT_RANGE = b.dataset.range;
+        applyRange(CURRENT_RANGE);
       };
     });
+    // Автообновление CSV каждую минуту
+    setInterval(() => {
+      loadAndRender().catch(e => console.warn("auto-refresh:", e.message));
+    }, 60000);
   }catch(e){
     status.textContent="Ошибка: "+e.message;
     console.error(e);
