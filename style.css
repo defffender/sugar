@@ -36,7 +36,10 @@ main{max-width:900px;margin:0 auto;padding:16px 16px 64px}
 .hero-trend.steep-down {color:var(--vlow)}
 .hero-trend.flat  {color:var(--in)}
 
-.hero-meta{display:flex;gap:16px;color:var(--muted);font-size:13px}
+.hero-meta{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font-size:13px}
+.hero-meta .hero-clock{font-size:18px;font-weight:600;color:var(--txt);letter-spacing:0.02em;font-variant-numeric:tabular-nums}
+.hero-meta .hero-clock .tz{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px;letter-spacing:0.06em}
+.hero-meta .hero-time.stale{color:var(--low)}
 .hero-meta .hero-delta.pos{color:var(--high)}
 .hero-meta .hero-delta.neg{color:var(--low)}
 
@@ -67,6 +70,8 @@ main{max-width:900px;margin:0 auto;padding:16px 16px 64px}
   padding:14px;margin-bottom:16px}
 .chart-wrap h2{margin:0 0 10px 0;font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0.02em}
 canvas{width:100%!important;height:300px!important}
+/* На мобильном: вертикальный свайп прокручивает страницу, горизонтальный — скрабит график */
+#chart, #hourly{touch-action:pan-y}
 
 /* ============ TIR section (donut + legend + bar) ============ */
 .tir-section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
