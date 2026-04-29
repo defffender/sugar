@@ -1,4 +1,4 @@
- name: Health Sync
+  name: Health Sync
 
   on:
     repository_dispatch:
