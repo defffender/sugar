@@ -1,4 +1,4 @@
-  name: Health Sync
+ name: Health Sync
 
   on:
     repository_dispatch:
@@ -17,7 +17,7 @@
       steps:
         - uses: actions/checkout@v5
 
-        - name: Write data.csv
+        - name: Merge data.csv
           env:
             CSV_BODY: ${{ github.event.client_payload.csv }}
           run: |
@@ -26,8 +26,14 @@
               exit 1
             fi
             {
-              echo "Time,Glucose (mmol/L)"
+              if [[ -f data.csv ]]; then
+                tail -n +2 data.csv
+              fi
               printf '%s\n' "$CSV_BODY"
+            } | sort -u -t, -k1,1 > /tmp/merged.csv
+            {
+              echo "Time,Glucose (mmol/L)"
+              cat /tmp/merged.csv
             } > data.csv
             wc -l data.csv
 
