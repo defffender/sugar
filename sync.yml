@@ -1,0 +1,41 @@
+name: Sync Sugar Data
+
+on:
+  schedule:
+    # Каждые 5 минут. GitHub может задерживать на 5–15 мин под нагрузкой — это нормально.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:  # ручной запуск кнопкой в Actions UI
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sugar-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull latest data from Tidepool
+        env:
+          TIDEPOOL_EMAIL: ${{ secrets.TIDEPOOL_EMAIL }}
+          TIDEPOOL_PASSWORD: ${{ secrets.TIDEPOOL_PASSWORD }}
+          DAYS_BACK: '30'
+        run: node scripts/sync.mjs
+
+      - name: Commit and push if changed
+        run: |
+          if [[ -z "$(git status --porcelain data.csv)" ]]; then
+            echo "data.csv unchanged, nothing to commit"
+            exit 0
+          fi
+          git config user.name "sugar-sync-bot"
+          git config user.email "sugar-sync-bot@users.noreply.github.com"
+          git add data.csv
+          git commit -m "auto: tidepool sync $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          # На случай гонки с другим пушем — подтянуть и попробовать ещё раз
+          git pull --rebase origin "$GITHUB_REF_NAME" || true
+          git push
